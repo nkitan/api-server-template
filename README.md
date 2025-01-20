@@ -11,6 +11,7 @@
 - REST API
 - Shared Config State
 - Environment Variable Support
+- Automatically Generate and Serve OpenAPI JSON
 - Uses Latest Version of Axum (0.8)
 
 ## Usage
