@@ -16,6 +16,7 @@ use routes::root::get_root;
 use std::sync::Arc;
 use routes::users::get_user;
 
+// Serve Pre-serialzed JSON
 async fn serve_api(Extension(api_json): Extension<Arc<String>>) -> impl IntoApiResponse {
     Json((*api_json).clone())
 }
@@ -36,13 +37,14 @@ async fn main() -> anyhow::Result<()>{
     .api_route("/", get(get_root))
     .api_route("/users/{id}", get(get_user))
     .with_state(config.clone())
+    // Routes mentioned under this do not require config access
     .route("/api.json", get(serve_api))
+    // Create API Spec Initially
     .finish_api(&mut api);
 
     // Serialize the OpenApi document to a JSON string
     let api_json = serde_json::to_string(&api).expect("Failed to serialize OpenAPI document");
     let shared_api_json = Arc::new(api_json);
-
 
     let bind_url = format!("{}:{}", config.env.hostname, config.env.port);
     let listener = tokio::net::TcpListener::bind(bind_url).await.unwrap();
