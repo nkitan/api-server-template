@@ -11,12 +11,15 @@
 - REST API
 - Shared Config State
 - Environment Variable Support
+- Uses Latest Version of Axum (0.8)
 
 ## Usage
 
-Setting up api-server-template is as easy as running cargo run on the cloned directory
+Setting up api-server-template is as easy as setting up AXUM.env and running cargo run on the cloned directory
 ```sh
 $ git clone https://github.com/nkitan/api-server-template
+$ cd api-server-template
+$ cp AXUM.env.template AXUM.env
 $ cargo run
 ```
 
