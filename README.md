@@ -14,6 +14,8 @@
 - Automatically Generate and Serve OpenAPI JSON
 - Uses Latest Version of Axum (0.8)
 
+A list of upcoming / in-progress features can be found in the [TODO.md](TODO.md) file
+
 ## Usage
 
 Setting up api-server-template is as easy as setting up AXUM.env and running cargo run on the cloned directory
