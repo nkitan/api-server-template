@@ -1,0 +1,12 @@
+[package]
+name = "api-server-template"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+axum = "0.8.1"
+dotenv = "0.15.0"
+serde = { version = "1.0.217", features = ["derive"] }
+tokio = { version = "1.43.0", features = ["full"] }
+uuid = { version = "1.12.0", features = ["serde"] }
