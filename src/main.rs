@@ -10,24 +10,31 @@ use aide::{
     openapi::{Info, OpenApi},
 };
 
+use std::sync::Arc;
+use anyhow::Result;
 use axum::{Extension, Json};
+
 use config::ConfigState;
 use routes::root::get_root;
-use std::sync::Arc;
 use routes::users::get_user;
 
-// Serve Pre-serialzed JSON
+// Serve pre-serialzed JSON
 async fn serve_api(Extension(api_json): Extension<Arc<String>>) -> impl IntoApiResponse {
     Json((*api_json).clone())
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()>{
-    let config = Arc::new(ConfigState::from_env().await?);
+async fn main() -> Result<()>{
 
+    // Load Configuration
+    let config = Arc::new(ConfigState::from_env().await?);
+    let app_name_string: String = format!("{}:{}", config.appname.as_str(), config.version.as_str());
+    let bind_url = format!("{}:{}", config.env.hostname, config.env.port);
+
+    // Describe OpenAPI handler
     let mut api = OpenApi {
         info: Info {
-            description: Some("API Server Template".to_string()),
+            description: Some(app_name_string),
             ..Info::default()
         },
         ..OpenApi::default()
@@ -39,24 +46,26 @@ async fn main() -> anyhow::Result<()>{
     .with_state(config.clone())
     // Routes mentioned under this do not require config access
     .route("/api.json", get(serve_api))
-    // Create API Spec Initially
+    // Create API Spec from routes defined before this
     .finish_api(&mut api);
 
-    // Serialize the OpenApi document to a JSON string
-    let api_json = serde_json::to_string(&api).expect("Failed to serialize OpenAPI document");
-    let shared_api_json = Arc::new(api_json);
+    // Serialize the OpenAPI document to a JSON string for performance, store it in an atomic type for shared use
+    let api_json = Arc::new(serde_json::to_string(&api).expect("Failed to serialize OpenAPI document"));
 
-    let bind_url = format!("{}:{}", config.env.hostname, config.env.port);
+    // Start webserver on bind_url
     let listener = tokio::net::TcpListener::bind(bind_url).await.unwrap();
+
+    // Serve axum routes as service with OpenAPI JSON as a layer
     axum::serve(
         listener,
         app
             // Expose the documentation to the handlers.
-            .layer(Extension(shared_api_json))
+            .layer(Extension(api_json))
             .into_make_service(),
     )
     .await
     .unwrap();
 
+    // Return empty result on exit
     Ok(())
 }

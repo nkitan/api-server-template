@@ -7,6 +7,7 @@ This is a list of TODOs for API-Server-Template
 - [ ] Add Monitoring
 - [ ] Add CRUD Functionality for Users
   - [ ] Perform Complex Composite Queries
+- [ ] Add Auth Functionality
 
 ### In Progress
 
