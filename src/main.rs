@@ -43,7 +43,7 @@ async fn main() -> Result<()>{
     let app = ApiRouter::new()
     .api_route("/", get(get_root))
     .api_route("/users/{id}", get(get_user))
-    .with_state(config.clone())
+    .with_state(config)
     // Routes mentioned under this do not require config access
     .route("/api.json", get(serve_api))
     // Create API Spec from routes defined before this

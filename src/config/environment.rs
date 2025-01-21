@@ -8,6 +8,7 @@ pub struct EnvironmentVariables {
     pub port: u16,
     pub secret: Cow<'static, str>,
     pub hostname: Cow<'static, str>,
+    pub max_pool_connections: u32,
 }
 
 impl EnvironmentVariables {
@@ -31,6 +32,10 @@ impl EnvironmentVariables {
                 Ok(hostname) => hostname.into(),
                 Err(err) => bail!("missing HOSTNAME: {err}"),
             },
+            max_pool_connections: match dotenv::var("MAX_POOL_CONNECTIONS") {
+                Ok(max_pool_connections) => max_pool_connections.parse()?,
+                _ => 5, 
+            }
         })
     }
 }
