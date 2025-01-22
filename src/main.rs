@@ -1,6 +1,7 @@
 mod routes;
 mod definitions;
 mod config;
+mod database;
 
 use aide::{
     axum::{
@@ -15,7 +16,7 @@ use anyhow::Result;
 use axum::{Extension, Json};
 
 use config::ConfigState;
-use routes::root::get_root;
+use routes::{root::get_root, users::post_user};
 use routes::users::get_user;
 
 // Serve pre-serialzed JSON
@@ -43,6 +44,7 @@ async fn main() -> Result<()>{
     let app = ApiRouter::new()
     .api_route("/", get(get_root))
     .api_route("/users/{id}", get(get_user))
+    .api_route("/users", axum::routing::post(post_user).into())
     .with_state(config)
     // Routes mentioned under this do not require config access
     .route("/api.json", get(serve_api))
