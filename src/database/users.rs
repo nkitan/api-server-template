@@ -32,3 +32,35 @@ pub async fn create_user(user: User, pool: &Pool<Postgres>) -> Result<Option<Use
 
     Ok(result) // Return the inserted user
 }
+
+pub async fn update_user(user: User, pool: &Pool<Postgres>) -> Result<Option<User>, sqlx::Error> {
+    // Update user in the database
+    let result = sqlx::query_as::<_, User>(
+        r#"
+        UPDATE users
+        SET username = $1
+        WHERE user_id = $2
+        RETURNING user_id, username
+        "#,
+    )
+    .bind(user.username) // Bind the new username
+    .bind(user.user_id) // Bind the user_id
+    .fetch_optional(pool) // Fetch the updated row
+    .await?;
+
+    Ok(result) // Return the inserted user
+}
+
+pub(crate) async fn remove_user(user_id: Uuid, pool: &Pool<Postgres>) -> Result<Option<User>, sqlx::Error> {
+    let row= sqlx::query_as::<_, User>(
+    r#"
+        DELETE FROM users
+        WHERE user_id = $1
+        RETURNING user_id, username
+    "#,)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
+    
+    Ok(row)
+}

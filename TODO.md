@@ -9,7 +9,8 @@ This is a list of TODOs for API-Server-Template
 
 ### In Progress
 
-- [ ] Add CRUD Functionality for Users
+- [-] Add CRUD Functionality for Users
+  - [x] Perform Basic CRUD for User
   - [ ] Perform Complex Composite Queries
   
 ### Done ✓
