@@ -134,6 +134,19 @@ pub async fn put_user(
         }
     };
 
+    // Validate the email field if provided
+    let _email = match &new_user.email {
+        Some(email) if is_valid_email(email) => Some(email.clone()),
+        Some(_) => {
+            eprintln!("Invalid email: does not match valid email format");
+            return (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Json(json!({ "error": "Invalid email format" })),
+            );
+        }
+        None => None, // No email provided, set to None
+    };
+
     // Perform partial update
     let res = match update_user(
         new_user,
