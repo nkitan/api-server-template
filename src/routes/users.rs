@@ -1,19 +1,11 @@
 use std::sync::Arc;
 use axum::{extract::{Path, State}, http::StatusCode, Json};
-use serde::Deserialize;
 use serde_json::json;
 use sqlx::Error;
-use crate::{config::ConfigState, database::{self, users::{remove_user, update_user}}, definitions::user::User};
+use crate::{config::ConfigState, database::{self, users::{remove_user, update_user}}, definitions::user::{NewUser, User}, custom::validators::is_valid_email};
 use uuid::Uuid;
 use aide::axum::IntoApiResponse;
 use database::users::{find_user, create_user};
-
-// Custom User struct for manual UUID validation
-#[derive(Debug, Deserialize)]
-pub struct NewUser {
-    user_id: String,
-    username: String,
-}
 
 #[axum::debug_handler]
 pub async fn get_user(
@@ -65,11 +57,38 @@ pub async fn post_user(State(config): State<Arc<ConfigState>>, Json(new_user): J
             );
         }
     };
+    
+    // Unwrap `username` and validate it
+    let username = match &new_user.username {
+        Some(name) if !name.trim().is_empty() => name.clone(),
+        _ => {
+            eprintln!("Invalid username: must not be empty");
+            return (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Json(json!({ "error": "Username must not be empty" })),
+            );
+        }
+    };
+
+    // Validate the email field if provided
+    let email = match &new_user.email {
+        Some(email) if is_valid_email(email) => Some(email.clone()),
+        Some(_) => {
+            eprintln!("Invalid email: does not match valid email format");
+            return (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Json(json!({ "error": "Invalid email format" })),
+            );
+        }
+        None => None, // No email provided, set to None
+    };
+    
 
     // Proceed to create the user
     let user = User {
         user_id,
-        username: new_user.username.clone(),
+        username,
+        email,
     };
 
     let res = match create_user(user, &config.pgpool).await {
@@ -99,9 +118,12 @@ pub async fn post_user(State(config): State<Arc<ConfigState>>, Json(new_user): J
 }
 
 #[axum::debug_handler]
-pub async fn put_user(State(config): State<Arc<ConfigState>>, Json(new_user): Json<NewUser>) -> impl IntoApiResponse {
+pub async fn put_user(
+    State(config): State<Arc<ConfigState>>,
+    Json(new_user): Json<NewUser>,
+) -> impl IntoApiResponse {
     // Check if UUID is valid
-    let user_id = match Uuid::parse_str(&new_user.user_id) {
+    let _user_id = match Uuid::parse_str(&new_user.user_id) {
         Ok(uuid) => uuid,
         Err(err) => {
             eprintln!("Invalid UUID: {err}");
@@ -112,17 +134,19 @@ pub async fn put_user(State(config): State<Arc<ConfigState>>, Json(new_user): Js
         }
     };
 
-    // Proceed to create the user
-    let user = User {
-        user_id,
-        username: new_user.username.clone(),
-    };
-
-    let res = match update_user(user, &config.pgpool).await {
-        Ok(Some(user)) => (StatusCode::CREATED, Json(json!(user))),
+    // Perform partial update
+    let res = match update_user(
+        new_user,
+        &config.pgpool,
+    )
+    .await
+    {
+        Ok(Some(user)) => {
+            (StatusCode::OK, Json(json!(user)))
+        },
         Ok(None) => (
             StatusCode::NOT_FOUND,
-            Json(json!({ "error": "User not found" })),
+            Json(json!({ "error": "User not found or no fields to update" })),
         ),
         Err(err) => {
             eprintln!("Internal Server Error: {err}");
@@ -130,7 +154,7 @@ pub async fn put_user(State(config): State<Arc<ConfigState>>, Json(new_user): Js
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({ "error": "Internal server error"})),
             )
-        },
+        }
     };
 
     res

@@ -2,10 +2,11 @@ mod routes;
 mod definitions;
 mod config;
 mod database;
+mod custom;
 
 use aide::{
     axum::{
-        routing::{get, post},
+        routing::get,
         ApiRouter, IntoApiResponse,
     },
     openapi::{Info, OpenApi},
