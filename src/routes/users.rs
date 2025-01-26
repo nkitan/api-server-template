@@ -178,7 +178,10 @@ pub async fn delete_user(user_id_result: Result<Path<Uuid>, axum::extract::rejec
     };
 
     let res = match remove_user(user_id, &config.pgpool).await {
-        Ok(Some(user)) => (StatusCode::CREATED, Json(json!(user))),
+        Ok(Some(user)) => {
+            println!("User {} deleted successfully", user.user_id);
+            (StatusCode::NO_CONTENT, Json(json!({"message": "User deleted successfully"})))
+        },
         Ok(None) => (
             StatusCode::NOT_FOUND,
             Json(json!({ "error": "User not found" })),

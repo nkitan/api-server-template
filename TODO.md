@@ -6,6 +6,7 @@ This is a list of TODOs for API-Server-Template
 
 - [ ] Add Monitoring
 - [ ] Add Auth Functionality
+- [ ] Add Custom Logging
 
 ### In Progress
 

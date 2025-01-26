@@ -91,7 +91,7 @@ pub(crate) async fn remove_user(user_id: Uuid, pool: &Pool<Postgres>) -> Result<
     r#"
         DELETE FROM users
         WHERE user_id = $1
-        RETURNING user_id, username
+        RETURNING user_id, username, email
     "#,)
     .bind(user_id)
     .fetch_optional(pool)
