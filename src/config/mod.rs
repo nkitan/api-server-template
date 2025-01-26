@@ -2,6 +2,7 @@ mod environment;
 
 use anyhow::bail;
 use environment::EnvironmentVariables;
+use reqwest::Client;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 
 #[derive(Clone)]
@@ -10,6 +11,7 @@ pub struct ConfigState {
     pub appname: String,
     pub version: String,
     pub pgpool: Pool<Postgres>,
+    pub client: Client,
 }
 
 impl ConfigState {
@@ -25,7 +27,7 @@ impl ConfigState {
         let connection_url: String = format!("postgresql://{}@{}/{}", &env.database_creds, database_fqdn, &env.database_name);
 
         println!("Attempting to connect to PgPool @ {database_fqdn}");
-        let pgpool: Pool<Postgres> = match PgPoolOptions::new().max_connections(env.max_pool_connections).connect(&connection_url).await {
+        let pgpool: Pool<Postgres> = match PgPoolOptions::new().max_connections(env.max_pool_connections.parse()?).connect(&connection_url).await {
             Ok(pool) => {
                 println!("Connected to DB: {}", database_fqdn);
                 pool
@@ -33,11 +35,14 @@ impl ConfigState {
             Err(err) => bail!("Failed To Connect To DB: {err}"),
         };
 
+        let client: Client = Client::new();
+
         Ok(Self {
-            env: env,
-            appname: appname,
-            version: version,
-            pgpool: pgpool,
+            env,
+            appname,
+            version,
+            pgpool,
+            client,
         })
     }
 }

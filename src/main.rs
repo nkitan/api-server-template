@@ -18,7 +18,7 @@ use anyhow::Result;
 use axum::{Extension, Json};
 
 use config::ConfigState;
-use routes::{root::get_root, users::{delete_user, post_user, put_user}};
+use routes::{auth::login_user, root::get_root, users::{delete_user, post_user, put_user}};
 use routes::users::get_user;
 
 // Serve pre-serialzed JSON
@@ -29,6 +29,7 @@ async fn serve_api(Extension(api_json): Extension<Arc<String>>) -> impl IntoApiR
 pub fn public_router(config: Arc<ConfigState>) -> ApiRouter {
     ApiRouter::new()
     .api_route("/", get(get_root))
+    .api_route("/login", axum::routing::post(login_user).into())
     .route("/api.json", get(serve_api))
     .with_state(config)
 }
