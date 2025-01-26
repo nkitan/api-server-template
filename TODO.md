@@ -5,7 +5,6 @@ This is a list of TODOs for API-Server-Template
 ### TODO
 
 - [ ] Add Monitoring
-- [ ] Add Auth Functionality
 - [ ] Add Custom Logging
 
 ### In Progress
@@ -13,7 +12,9 @@ This is a list of TODOs for API-Server-Template
 - [-] Add CRUD Functionality for Users
   - [x] Perform Basic CRUD for User
   - [ ] Perform Complex Composite Queries
-  
+- [-] Add Auth Functionality
+  - [x] Add API Auth using Bearer Tokens
+
 ### Done ✓
 
 - [x] Add Automatic OpenAPI Spec Generation
