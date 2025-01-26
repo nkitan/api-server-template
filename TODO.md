@@ -15,7 +15,6 @@ This is a list of TODOs for API-Server-Template
 - [-] Add Auth Functionality
   - [-] Add Role Based Access Control
   - [x] Add API Auth using Bearer Tokens
-- [ ] Add Monitoring
 
 ### Done ✓
 
@@ -23,3 +22,4 @@ This is a list of TODOs for API-Server-Template
 - [x] Parse Configs and Pass as State
 - [x] Add Basic REST Implementation
 - [x] Add Database Integration
+- [x] Add Monitoring

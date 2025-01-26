@@ -22,6 +22,7 @@ use axum::{Extension, Json};
 use config::ConfigState;
 use routes::{auth::login_user, root::get_root, users::{delete_user, post_user, put_user}};
 use routes::users::get_user;
+use axum_prometheus::PrometheusMetricLayer;
 
 // Serve pre-serialzed JSON
 async fn serve_api(Extension(api_json): Extension<Arc<String>>) -> impl IntoApiResponse {
@@ -29,10 +30,14 @@ async fn serve_api(Extension(api_json): Extension<Arc<String>>) -> impl IntoApiR
 }
 
 pub fn public_router(config: Arc<ConfigState>) -> ApiRouter {
+    let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
+
     ApiRouter::new()
     .api_route("/", get(get_root))
     .api_route("/login", axum::routing::post(login_user).into())
-    .route("/api.json", get(serve_api))
+    .api_route("/api.json", get(serve_api))
+    .api_route("/metrics", get(|| async move { metric_handle.render() }))
+    .layer(prometheus_layer)
     .with_state(config)
 }
 
