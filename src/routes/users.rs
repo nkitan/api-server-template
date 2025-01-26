@@ -14,8 +14,7 @@ pub async fn get_user(
     user_id_result: Result<Path<Uuid>, axum::extract::rejection::PathRejection>,
     State(config): State<Arc<ConfigState>>,
 ) -> impl IntoApiResponse {
-    println!("{:?}", token);
-
+    
     // Check if UUID is valid
     let user_id = match user_id_result {
         Ok(Path(id)) => id,
@@ -49,7 +48,11 @@ pub async fn get_user(
 }
 
 #[axum::debug_handler]
-pub async fn post_user(State(config): State<Arc<ConfigState>>, Json(new_user): Json<NewUser>) -> impl IntoApiResponse {
+pub async fn post_user(
+    Extension(token): Extension<KeycloakToken<String>>,
+    State(config): State<Arc<ConfigState>>,
+    Json(new_user): Json<NewUser>
+) -> impl IntoApiResponse {
     // Check if UUID is valid
     let user_id = match Uuid::parse_str(&new_user.user_id) {
         Ok(uuid) => uuid,
@@ -123,6 +126,7 @@ pub async fn post_user(State(config): State<Arc<ConfigState>>, Json(new_user): J
 
 #[axum::debug_handler]
 pub async fn put_user(
+    Extension(token): Extension<KeycloakToken<String>>,
     State(config): State<Arc<ConfigState>>,
     Json(new_user): Json<NewUser>,
 ) -> impl IntoApiResponse {
@@ -178,7 +182,11 @@ pub async fn put_user(
 }
 
 #[axum::debug_handler]
-pub async fn delete_user(user_id_result: Result<Path<Uuid>, axum::extract::rejection::PathRejection>, State(config): State<Arc<ConfigState>>) -> impl IntoApiResponse {
+pub async fn delete_user(
+    Extension(token): Extension<KeycloakToken<String>>,
+    user_id_result: Result<Path<Uuid>, axum::extract::rejection::PathRejection>,
+    State(config): State<Arc<ConfigState>>
+) -> impl IntoApiResponse {
     // Check if UUID is valid
     let user_id = match user_id_result {
         Ok(Path(id)) => id,

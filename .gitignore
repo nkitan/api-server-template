@@ -1,3 +1,4 @@
 /target
 AXUM.env
 Cargo.lock
+spec/
