@@ -2,6 +2,8 @@ mod routes;
 mod definitions;
 mod config;
 mod database;
+
+#[macro_use]
 mod custom;
 
 use aide::{
@@ -36,7 +38,6 @@ pub fn public_router(config: Arc<ConfigState>) -> ApiRouter {
 
 #[tokio::main]
 async fn main() -> Result<()>{
-
     // Load Configuration
     let config = Arc::new(ConfigState::from_env().await?);
     let app_name_string: String = format!("{}:{}", config.appname.as_str(), config.version.as_str());
@@ -51,6 +52,7 @@ async fn main() -> Result<()>{
         ..OpenApi::default()
     };
 
+    // Create keycloak auth integration instance
     let keycloak_auth_instance = KeycloakAuthInstance::new(
         KeycloakConfig::builder()
             .server(Url::parse("http://localhost:8080/").unwrap())

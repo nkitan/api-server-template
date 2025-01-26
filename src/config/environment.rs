@@ -1,24 +1,5 @@
 use std::borrow::Cow;
-use anyhow::bail;
-
-macro_rules! make_config {
-    ($struct_name:ident { $( $field_name:ident : $field_type:ty ),* $(,)? }) => {
-        impl $struct_name {
-            pub fn from_env() -> anyhow::Result<Self> {
-                dotenv::from_filename("AXUM.env").ok();
-
-                Ok(Self {
-                    $(
-                        $field_name: match dotenv::var(stringify!($field_name).to_uppercase()) {
-                            Ok(value) => value.into(),
-                            Err(err) => bail!("Missing {}: {}", stringify!($field_name), err),
-                        }
-                    ),*
-                })
-            }
-        }
-    };
-}
+use crate::make_config;
 
 #[derive(Clone, Debug)]
 pub struct EnvironmentVariables {

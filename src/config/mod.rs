@@ -1,5 +1,6 @@
 mod environment;
 
+use crate::cli_divider;
 use anyhow::bail;
 use environment::EnvironmentVariables;
 use reqwest::Client;
@@ -37,6 +38,9 @@ impl ConfigState {
 
         let client: Client = Client::new();
 
+        cli_divider!();
+        println!("Started {}", format!("{}:{}", appname.as_str(), version.as_str()));
+    
         Ok(Self {
             env,
             appname,
