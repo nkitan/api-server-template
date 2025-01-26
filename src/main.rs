@@ -11,6 +11,7 @@ use aide::{
     },
     openapi::{Info, OpenApi},
 };
+use axum_keycloak_auth::{instance::{KeycloakAuthInstance, KeycloakConfig}, layer::KeycloakAuthLayer, PassthroughMode, Url};
 
 use std::sync::Arc;
 use anyhow::Result;
@@ -23,6 +24,13 @@ use routes::users::get_user;
 // Serve pre-serialzed JSON
 async fn serve_api(Extension(api_json): Extension<Arc<String>>) -> impl IntoApiResponse {
     Json((*api_json).clone())
+}
+
+pub fn public_router(config: Arc<ConfigState>) -> ApiRouter {
+    ApiRouter::new()
+    .api_route("/", get(get_root))
+    .route("/api.json", get(serve_api))
+    .with_state(config)
 }
 
 #[tokio::main]
@@ -42,14 +50,30 @@ async fn main() -> Result<()>{
         ..OpenApi::default()
     };
 
+    let keycloak_auth_instance = KeycloakAuthInstance::new(
+        KeycloakConfig::builder()
+            .server(Url::parse("http://localhost:8080/").unwrap())
+            .realm(String::from("api-template"))
+            .build(),
+    );
+
     let app = ApiRouter::new()
-    .api_route("/", get(get_root))
     .api_route("/users/{id}", get(get_user).delete(delete_user))
     .api_route("/users", axum::routing::post(post_user).into())
     .api_route("/users", axum::routing::put(put_user).into())
-    .with_state(config)
-    // Routes mentioned under this do not require config access
-    .route("/api.json", get(serve_api))
+    .with_state(config.clone())
+    .layer(
+        KeycloakAuthLayer::<String>::builder()
+            .instance(keycloak_auth_instance)
+            .passthrough_mode(PassthroughMode::Block)
+            .persist_raw_claims(false)
+            .expected_audiences(vec![String::from("account")])
+            .required_roles(vec![String::from("administrator")])
+            .build(),
+    )
+    // Merge public routes
+    .merge(public_router(config))
+
     // Create API Spec from routes defined before this
     .finish_api(&mut api);
 

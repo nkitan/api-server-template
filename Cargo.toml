@@ -7,6 +7,7 @@ edition = "2021"
 aide = { version = "0.14.0", features = ["axum", "axum-json"] }
 anyhow = "1.0.95"
 axum = { version = "0.8.1", features = ["macros"] }
+axum-keycloak-auth = "0.7.0"
 dotenv = "0.15.0"
 regex = "1.11.1"
 schemars = { version = "0.8.21", features = ["uuid", "uuid1"] }

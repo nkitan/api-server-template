@@ -5,7 +5,7 @@ use uuid::Uuid;
 pub(crate) async fn find_user(user_id: Uuid, pool: &Pool<Postgres>) -> Result<Option<User>, sqlx::Error> {
     let row= sqlx::query_as::<_, User>(
     r#"
-        SELECT user_id, username
+        SELECT user_id, username, email
         FROM users
         WHERE user_id = $1
     "#,)

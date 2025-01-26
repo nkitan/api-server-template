@@ -1,5 +1,6 @@
 use std::sync::Arc;
-use axum::{extract::{Path, State}, http::StatusCode, Json};
+use axum::{extract::{Path, State}, http::StatusCode, Extension, Json};
+use axum_keycloak_auth::decode::KeycloakToken;
 use serde_json::json;
 use sqlx::Error;
 use crate::{config::ConfigState, database::{self, users::{remove_user, update_user}}, definitions::user::{NewUser, User}, custom::validators::is_valid_email};
@@ -9,9 +10,12 @@ use database::users::{find_user, create_user};
 
 #[axum::debug_handler]
 pub async fn get_user(
+    Extension(token): Extension<KeycloakToken<String>>,
     user_id_result: Result<Path<Uuid>, axum::extract::rejection::PathRejection>,
     State(config): State<Arc<ConfigState>>,
 ) -> impl IntoApiResponse {
+    println!("{:?}", token);
+
     // Check if UUID is valid
     let user_id = match user_id_result {
         Ok(Path(id)) => id,
@@ -193,7 +197,7 @@ pub async fn delete_user(user_id_result: Result<Path<Uuid>, axum::extract::rejec
     let res = match remove_user(user_id, &config.pgpool).await {
         Ok(Some(user)) => {
             println!("User {} deleted successfully", user.user_id);
-            (StatusCode::NO_CONTENT, Json(json!({"message": "User deleted successfully"})))
+            (StatusCode::ACCEPTED, Json(json!({"message": "User deleted successfully"})))
         },
         Ok(None) => (
             StatusCode::NOT_FOUND,
