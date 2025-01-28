@@ -12,9 +12,6 @@ This is a list of TODOs for API-Server-Template
 - [-] Add CRUD Functionality for Users
   - [x] Perform Basic CRUD for User
   - [ ] Perform Complex Composite Queries
-- [-] Add Auth Functionality
-  - [-] Add Role Based Access Control
-  - [x] Add API Auth using Bearer Tokens
 
 ### Done ✓
 
@@ -23,3 +20,6 @@ This is a list of TODOs for API-Server-Template
 - [x] Add Basic REST Implementation
 - [x] Add Database Integration
 - [x] Add Monitoring
+- [x] Add Auth Functionality
+  - [x] Add Role Based Access Control
+  - [x] Add API Auth using Bearer Tokens

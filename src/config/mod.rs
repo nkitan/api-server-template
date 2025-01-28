@@ -39,7 +39,7 @@ impl ConfigState {
         let client: Client = Client::new();
 
         cli_divider!();
-        println!("Started {}", format!("{}:{}", appname.as_str(), version.as_str()));
+        println!("Started {}", format!("{}:{} on port {}", appname.as_str(), version.as_str(), env.port));
     
         Ok(Self {
             env,

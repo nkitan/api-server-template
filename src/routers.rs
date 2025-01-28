@@ -28,13 +28,14 @@ pub fn open_api_router(config: Arc<ConfigState>) -> ApiRouter {
     .with_state(config)
 }
 
-pub fn metrics_router() -> ApiRouter {
-    let (mut prometheus_layer, mut metric_handle) = PrometheusMetricLayer::pair();
+pub fn metrics_router() -> (ApiRouter, PrometheusMetricLayer<'static>) {
+    let (mut prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
     prometheus_layer.enable_response_body_size();
     
-    ApiRouter::new()
-    .api_route("/metrics", get(|| async move { metric_handle.render() }))
-    .layer(prometheus_layer)
+    let router = ApiRouter::new()
+    .api_route("/metrics", get(|| async move { metric_handle.render() }));
+
+    (router, prometheus_layer)
 }
 
 // Protector router layer

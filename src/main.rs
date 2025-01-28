@@ -34,13 +34,14 @@ async fn main() -> Result<()>{
         },
         ..OpenApi::default()
     };
-
+    
+    let (metrics_router, prometheus_layer) = metrics_router();
     let app = ApiRouter::new()
     .merge(private_router(config.clone()))
     .merge(public_router(config.clone()))
+    .merge(metrics_router)
+    .layer(prometheus_layer)
     .merge(open_api_router(config.clone()))
-    .merge(metrics_router())
-
     // Create API Spec from routes defined before this
     .finish_api(&mut api);
 
