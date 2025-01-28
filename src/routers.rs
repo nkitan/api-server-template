@@ -15,19 +15,14 @@ async fn serve_api(Extension(api_json): Extension<Arc<String>>) -> impl IntoApiR
     Json((*api_json).clone())
 }
 
-pub fn public_router(config: Arc<ConfigState>) -> ApiRouter {
-    ApiRouter::new()
-    .api_route("/", get(get_root))
-    .api_route("/login", axum::routing::post(login_user).into())
-    .with_state(config)
-}
-
+// OpenAPI endpoints
 pub fn open_api_router(config: Arc<ConfigState>) -> ApiRouter {
     ApiRouter::new()
     .api_route("/api.json", get(serve_api))
     .with_state(config)
 }
 
+// Protected endpoints
 pub fn metrics_router() -> (ApiRouter, PrometheusMetricLayer<'static>) {
     let (mut prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
     prometheus_layer.enable_response_body_size();
@@ -46,11 +41,12 @@ pub fn protect(router:ApiRouter, instance: Arc<KeycloakAuthInstance>) -> ApiRout
             .passthrough_mode(PassthroughMode::Block)
             .persist_raw_claims(false)
             .expected_audiences(vec![String::from("account")])
-            .required_roles(vec![String::from("administrator")])
+            .required_roles(vec![String::from("user")])
             .build(),
     )
 }
 
+// Protected endpoints
 pub fn private_router(config: Arc<ConfigState>) -> ApiRouter {
     // Create keycloak auth integration instance
     let keycloak_auth_instance = KeycloakAuthInstance::new(
@@ -67,4 +63,12 @@ pub fn private_router(config: Arc<ConfigState>) -> ApiRouter {
     .with_state(config.clone());
     
     protect(unprotected_router, keycloak_auth_instance.into())
+}
+
+// Publically available endpoints
+pub fn public_router(config: Arc<ConfigState>) -> ApiRouter {
+    ApiRouter::new()
+    .api_route("/", get(get_root))
+    .api_route("/login", axum::routing::post(login_user).into())
+    .with_state(config)
 }
