@@ -12,7 +12,7 @@ use aide::{
     axum::ApiRouter,
     openapi::{Info, OpenApi},
 };
-use tower::Layer;
+use definitions::logging::get_included_paths;
 use tracing::{info_span, Span};
 
 use std::{sync::Arc, time::Duration};
@@ -77,10 +77,10 @@ async fn main() -> Result<()>{
         })
         .on_request(move |request: &Request<_>, span: &Span| {
             // Skip logging requests to skip_paths
-            let skip_paths = vec!["/metrics"];
+            let skip_paths = get_included_paths();
             let path = request.uri().path();
             
-            if skip_paths.contains(&path) {
+            if skip_paths.contains(&path.to_string()) {
                 return;
             }
             

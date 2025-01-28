@@ -13,7 +13,9 @@ pub struct EnvironmentVariables {
     pub max_pool_connections: Cow<'static, str>,
     pub kc_client_id: Cow<'static, str>,
     pub kc_client_secret: Cow<'static, str>,
-    pub kc_login_url: Cow<'static, str>,
+    pub kc_server_addr: Cow<'static, str>,
+    pub kc_login_path: Cow<'static, str>,
+
 }
 
 make_config!(EnvironmentVariables {
@@ -27,5 +29,6 @@ make_config!(EnvironmentVariables {
     max_pool_connections: Cow<'static, str>,
     kc_client_id: Cow<'static, str>,
     kc_client_secret: Cow<'static, str>,
-    kc_login_url: Cow<'static, str>,
+    kc_server_addr: Cow<'static, str>,
+    kc_login_path: Cow<'static, str>,
 });

@@ -18,7 +18,7 @@ pub async fn login_user(
     params.insert("username", &new_user.username);
     params.insert("password", &new_user.password);
 
-    let resp = config.client.post(config.env.kc_login_url.to_string())
+    let resp = config.client.post(format!("{}{}",config.env.kc_server_addr.to_string(), config.env.kc_login_path.to_string()))
     .form(&params)
     .send()
     .await;
