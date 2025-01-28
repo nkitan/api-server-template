@@ -25,3 +25,17 @@ macro_rules! cli_divider {
         println!("{}", "-".repeat(CLI_DIVIDER_WIDTH));
     };
 }
+
+#[macro_export]
+macro_rules! expect_admin {
+    ($token: expr) => {
+        if let Err(_) = axum_keycloak_auth::role::ExpectRoles::expect_roles($token, &[String::from("administrator")]) {
+            return (
+                StatusCode::FORBIDDEN,
+                Json(json!({
+                    "error": "insufficient privileges",
+                })),
+            )
+        }
+    };
+}

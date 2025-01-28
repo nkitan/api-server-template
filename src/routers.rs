@@ -4,7 +4,7 @@ use crate::{config::ConfigState, routes::{auth::login_user, root::get_root, user
 use crate::routes::users::get_user;
 use axum_prometheus::PrometheusMetricLayer;
 use axum_keycloak_auth::{instance::{KeycloakAuthInstance, KeycloakConfig}, layer::KeycloakAuthLayer, PassthroughMode, Url};
-use axum::{Extension, Json};
+use axum::{http::{HeaderValue, Request}, middleware::Next, Extension, Json};
 use aide::axum::{
     routing::get,
     ApiRouter, IntoApiResponse,
@@ -22,13 +22,26 @@ pub fn open_api_router(config: Arc<ConfigState>) -> ApiRouter {
     .with_state(config)
 }
 
-// Protected endpoints
+// Metrics endpoints
 pub fn metrics_router() -> (ApiRouter, PrometheusMetricLayer<'static>) {
     let (mut prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
     prometheus_layer.enable_response_body_size();
-    
+
+    let mark_ignore_log = |req: Request<_>, next: Next| async move {
+        // Pass the request through and get the response
+        let mut response = next.run(req).await;
+
+        // Modify the response headers
+        response.headers_mut()
+            .insert("IGNORE_LOG", HeaderValue::from_str("true").unwrap());
+
+        // Return the modified response
+        response
+    };
+
     let router = ApiRouter::new()
-    .api_route("/metrics", get(|| async move { metric_handle.render() }));
+    .api_route("/metrics", get(|| async move { metric_handle.render() }))
+    .layer(axum::middleware::from_fn(mark_ignore_log)); // Apply middleware to add IGNORE_LOG header
 
     (router, prometheus_layer)
 }

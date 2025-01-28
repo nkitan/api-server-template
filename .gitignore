@@ -3,3 +3,4 @@ AXUM.env
 Cargo.lock
 spec/
 .env
+logs/

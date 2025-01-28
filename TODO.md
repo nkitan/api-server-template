@@ -4,9 +4,6 @@ This is a list of TODOs for API-Server-Template
 
 ### TODO
 
-- [ ] Add Custom Logging
-  - [ ] Implement logging using tracing crate
-
 ### In Progress
 
 - [-] Add CRUD Functionality for Users
@@ -23,3 +20,5 @@ This is a list of TODOs for API-Server-Template
 - [x] Add Auth Functionality
   - [x] Add Role Based Access Control
   - [x] Add API Auth using Bearer Tokens
+- [x] Add Custom Logging
+  - [x] Implement logging using tracing crate

@@ -1,13 +1,15 @@
 use std::sync::Arc;
 use axum::{extract::{Path, State}, http::StatusCode, Extension, Json};
-use axum_keycloak_auth::{decode::KeycloakToken, expect_role};
+use axum_keycloak_auth::decode::KeycloakToken;
 use serde_json::json;
 use sqlx::Error;
-use crate::{config::ConfigState, database::{self, users::{remove_user, update_user}}, definitions::user::{NewUser, User}, custom::validators::is_valid_email};
+use tracing::instrument;
+use crate::{config::ConfigState, custom::validators::is_valid_email, database::{self, users::{remove_user, update_user}}, definitions::user::{NewUser, User}, expect_admin};
 use uuid::Uuid;
 use aide::axum::IntoApiResponse;
 use database::users::{find_user, create_user};
 
+#[instrument(skip(config))]
 #[axum::debug_handler]
 pub async fn get_user(
     Extension(token): Extension<KeycloakToken<String>>,
@@ -46,6 +48,7 @@ pub async fn get_user(
     }
 }
 
+#[instrument(skip(config))]
 #[axum::debug_handler]
 pub async fn post_user(
     Extension(token): Extension<KeycloakToken<String>>,
@@ -53,15 +56,7 @@ pub async fn post_user(
     Json(new_user): Json<NewUser>
 ) -> impl IntoApiResponse {
     // Ensure user is admin
-    if let Err(err) = axum_keycloak_auth::role::ExpectRoles::expect_roles(&token, &[String::from("administrator")]) {
-        return (
-            StatusCode::FORBIDDEN,
-            Json(json!({
-                "status": "error",
-                "message": "insufficient privileges",
-            })),
-        )
-    }
+    expect_admin!(&token);
 
     // Check if UUID is valid
     let user_id = match Uuid::parse_str(&new_user.user_id) {
@@ -134,6 +129,7 @@ pub async fn post_user(
     res
 }
 
+#[instrument(skip(config))]
 #[axum::debug_handler]
 pub async fn put_user(
     Extension(token): Extension<KeycloakToken<String>>,
@@ -142,15 +138,7 @@ pub async fn put_user(
     Json(new_user): Json<NewUser>,
 ) -> impl IntoApiResponse {
     // Ensure user is admin
-    if let Err(err) = axum_keycloak_auth::role::ExpectRoles::expect_roles(&token, &[String::from("administrator")]) {
-        return (
-            StatusCode::FORBIDDEN,
-            Json(json!({
-                "status": "error",
-                "message": "insufficient privileges",
-            })),
-        )
-    }
+    expect_admin!(&token);
 
     // Check if UUID is valid
     let user_id = match user_id_result {
@@ -207,6 +195,7 @@ pub async fn put_user(
     res
 }
 
+#[instrument(skip(config))]
 #[axum::debug_handler]
 pub async fn delete_user(
     Extension(token): Extension<KeycloakToken<String>>,
@@ -214,15 +203,7 @@ pub async fn delete_user(
     State(config): State<Arc<ConfigState>>
 ) -> impl IntoApiResponse {
     // Ensure user is admin
-    if let Err(err) = axum_keycloak_auth::role::ExpectRoles::expect_roles(&token, &[String::from("administrator")]) {
-        return (
-            StatusCode::FORBIDDEN,
-            Json(json!({
-                "status": "error",
-                "message": "insufficient privileges",
-            })),
-        )
-    }
+    expect_admin!(&token);
 
     // Check if UUID is valid
     let user_id = match user_id_result {
