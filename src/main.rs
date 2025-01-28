@@ -3,6 +3,7 @@ mod definitions;
 mod config;
 mod database;
 mod routers;
+mod middleware;
 
 #[macro_use]
 mod custom;
@@ -11,6 +12,7 @@ use aide::{
     axum::ApiRouter,
     openapi::{Info, OpenApi},
 };
+use tower::Layer;
 use tracing::{info_span, Span};
 
 use std::{sync::Arc, time::Duration};
@@ -22,7 +24,7 @@ use config::ConfigState;
 use tracing_appender::rolling;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt};
 use tower_http::trace::TraceLayer;
-
+use middleware::ignore_logs::ignore_logs;
 
 #[tokio::main]
 async fn main() -> Result<()>{
@@ -56,7 +58,6 @@ async fn main() -> Result<()>{
         .init();
 
     // Create tracing layer
-    
     let tracer = TraceLayer::new_for_http()
         .make_span_with(|request: &Request<_>| {
             // Log the matched route's path (with placeholders not filled in).
@@ -87,7 +88,7 @@ async fn main() -> Result<()>{
         })
         .on_response(move |response: &Response<_>, latency: Duration, span: &Span| {
             // Do not log responses marked as IGNORE_LOG = "true"
-            match response.headers().get("IGNORE_LOG") {
+            match response.headers().get("X-Ignore-Log") {
                 Some(value) => {
                     if value == "true"{
                         return;
@@ -122,6 +123,7 @@ async fn main() -> Result<()>{
     .merge(metrics_router)
     .layer(prometheus_layer)
     .merge(open_api_router(config.clone()))
+    .layer(axum::middleware::from_fn(ignore_logs))
     .layer(tracer)
     // Create API Spec from routes defined before this
     .finish_api(&mut api);

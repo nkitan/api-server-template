@@ -40,8 +40,8 @@ pub fn metrics_router() -> (ApiRouter, PrometheusMetricLayer<'static>) {
     };
 
     let router = ApiRouter::new()
-    .api_route("/metrics", get(|| async move { metric_handle.render() }))
-    .layer(axum::middleware::from_fn(mark_ignore_log)); // Apply middleware to add IGNORE_LOG header
+    .api_route("/metrics", get(|| async move { metric_handle.render() }));
+    //.layer(axum::middleware::from_fn(mark_ignore_log)); // Apply middleware to add IGNORE_LOG header
 
     (router, prometheus_layer)
 }
