@@ -13,8 +13,7 @@ pub async fn get_user(
     Extension(token): Extension<KeycloakToken<String>>,
     user_id_result: Result<Path<Uuid>, axum::extract::rejection::PathRejection>,
     State(config): State<Arc<ConfigState>>,
-) -> impl IntoApiResponse {
-    
+) -> impl IntoApiResponse {    
     // Check if UUID is valid
     let user_id = match user_id_result {
         Ok(Path(id)) => id,
@@ -127,16 +126,20 @@ pub async fn post_user(
 #[axum::debug_handler]
 pub async fn put_user(
     Extension(token): Extension<KeycloakToken<String>>,
+    user_id_result: Result<Path<Uuid>, axum::extract::rejection::PathRejection>,
     State(config): State<Arc<ConfigState>>,
     Json(new_user): Json<NewUser>,
 ) -> impl IntoApiResponse {
     // Check if UUID is valid
-    let _user_id = match Uuid::parse_str(&new_user.user_id) {
-        Ok(uuid) => uuid,
+    let user_id = match user_id_result {
+        Ok(Path(id)) => id,
         Err(err) => {
-            eprintln!("Invalid UUID: {err}");
+            // Log the detailed error on the server
+            eprintln!("Invalid UUID: {}", err);
+            
+            // Return error message to the client if UUID is invalid
             return (
-                StatusCode::UNPROCESSABLE_ENTITY,
+                StatusCode::BAD_REQUEST,
                 Json(json!({ "error": "Invalid UUID format" })),
             );
         }
@@ -157,6 +160,7 @@ pub async fn put_user(
 
     // Perform partial update
     let res = match update_user(
+        user_id,
         new_user,
         &config.pgpool,
     )

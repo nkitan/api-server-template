@@ -16,7 +16,9 @@ pub(crate) async fn find_user(user_id: Uuid, pool: &Pool<Postgres>) -> Result<Op
     Ok(row)
 }
 
-pub async fn create_user(user: User, pool: &Pool<Postgres>) -> Result<Option<User>, sqlx::Error> {
+pub async fn create_user(
+    user: User, pool: &Pool<Postgres>
+) -> Result<Option<User>, sqlx::Error> {
     // Insert the user into the database
     let result = sqlx::query_as::<_, User>(
         r#"
@@ -34,18 +36,10 @@ pub async fn create_user(user: User, pool: &Pool<Postgres>) -> Result<Option<Use
     Ok(result) // Return the inserted user
 }
 pub async fn update_user(
+    user_id_in: Uuid,
     new_user: NewUser,
     pool: &Pool<Postgres>,
 ) -> Result<Option<User>, sqlx::Error> {
-    // Check if UUID is valid
-    let user_id = match Uuid::parse_str(&new_user.user_id) {
-        Ok(uuid) => uuid,
-        Err(err) => {
-            eprintln!("Invalid UUID: {err}");
-            return Ok(None);  // Return None if UUID is invalid
-        }
-    };
-
     // Start building the query
     let mut query = String::from("UPDATE users SET ");
     let mut params: Vec<String> = Vec::new();
@@ -79,7 +73,7 @@ pub async fn update_user(
     let result = sqlx::query_as::<_, User>(&query)
         .bind(bindings.get(0).unwrap()) // Bind the first parameter (username)
         .bind(bindings.get(1).unwrap_or(&"".to_string())) // Bind second parameter (if exists)
-        .bind(user_id) // Bind user_id
+        .bind(user_id_in) // Bind user_id
         .fetch_optional(pool)
         .await?;
 

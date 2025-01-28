@@ -2,44 +2,22 @@ mod routes;
 mod definitions;
 mod config;
 mod database;
+mod routers;
 
 #[macro_use]
 mod custom;
 
 use aide::{
-    axum::{
-        routing::get,
-        ApiRouter, IntoApiResponse,
-    },
+    axum::ApiRouter,
     openapi::{Info, OpenApi},
 };
-use axum_keycloak_auth::{instance::{KeycloakAuthInstance, KeycloakConfig}, layer::KeycloakAuthLayer, PassthroughMode, Url};
 
 use std::sync::Arc;
 use anyhow::Result;
-use axum::{Extension, Json};
+use axum::Extension;
 
+use routers::{private_router, public_router, metrics_router, open_api_router};
 use config::ConfigState;
-use routes::{auth::login_user, root::get_root, users::{delete_user, post_user, put_user}};
-use routes::users::get_user;
-use axum_prometheus::PrometheusMetricLayer;
-
-// Serve pre-serialzed JSON
-async fn serve_api(Extension(api_json): Extension<Arc<String>>) -> impl IntoApiResponse {
-    Json((*api_json).clone())
-}
-
-pub fn public_router(config: Arc<ConfigState>) -> ApiRouter {
-    let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
-
-    ApiRouter::new()
-    .api_route("/", get(get_root))
-    .api_route("/login", axum::routing::post(login_user).into())
-    .api_route("/api.json", get(serve_api))
-    .api_route("/metrics", get(|| async move { metric_handle.render() }))
-    .layer(prometheus_layer)
-    .with_state(config)
-}
 
 #[tokio::main]
 async fn main() -> Result<()>{
@@ -57,30 +35,11 @@ async fn main() -> Result<()>{
         ..OpenApi::default()
     };
 
-    // Create keycloak auth integration instance
-    let keycloak_auth_instance = KeycloakAuthInstance::new(
-        KeycloakConfig::builder()
-            .server(Url::parse("http://localhost:8080/").unwrap())
-            .realm(String::from("api-template"))
-            .build(),
-    );
-
     let app = ApiRouter::new()
-    .api_route("/users/{id}", get(get_user).delete(delete_user))
-    .api_route("/users", axum::routing::post(post_user).into())
-    .api_route("/users", axum::routing::put(put_user).into())
-    .with_state(config.clone())
-    .layer(
-        KeycloakAuthLayer::<String>::builder()
-            .instance(keycloak_auth_instance)
-            .passthrough_mode(PassthroughMode::Block)
-            .persist_raw_claims(false)
-            .expected_audiences(vec![String::from("account")])
-            .required_roles(vec![String::from("administrator")])
-            .build(),
-    )
-    // Merge public routes
-    .merge(public_router(config))
+    .merge(private_router(config.clone()))
+    .merge(public_router(config.clone()))
+    .merge(open_api_router(config.clone()))
+    .merge(metrics_router())
 
     // Create API Spec from routes defined before this
     .finish_api(&mut api);
