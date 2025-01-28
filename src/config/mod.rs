@@ -48,7 +48,8 @@ impl ConfigState {
 
         cli_divider!();
         println!("Started {}", format!("{}:{} on port {}", appname.as_str(), version.as_str(), env.port));
-    
+        println!("Secret: {}", env.secret);
+
         Ok(Self {
             env,
             appname,
