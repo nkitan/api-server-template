@@ -18,7 +18,12 @@ A list of upcoming / in-progress features can be found in the [TODO.md](TODO.md)
 
 ## Usage
 
-Setting up api-server-template is as easy as configuring .env and AXUM.env, running migrations and running cargo run on the cloned directory
+Setting up api-server-template is as easy as 
+- configuring AXUM.env with details required for connecting to postgres and keycloak
+- configuring .env with DATABASE URL
+- running migrations
+and finally running cargo run on the cloned directory
+
 ```sh
 $ git clone https://github.com/nkitan/api-server-template
 $ cd api-server-template
@@ -26,6 +31,7 @@ $ sqlx migrate run
 $ cp AXUM.env.template AXUM.env
 $ cargo run
 ```
+The API can then be accessed at http://localhost:3030
 
 ## Maintainers
 
