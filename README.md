@@ -18,7 +18,8 @@ A list of upcoming / in-progress features can be found in the [TODO.md](TODO.md)
 
 ## Requirements
 1. PostgreSQL running in standalone / cluster mode with replication
-2. Rust 1.8
+2. Rust ~1.8
+3. Keycloak ~23.0.6
 
 ## Usage
 
