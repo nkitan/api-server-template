@@ -8,13 +8,17 @@
 
 ## Features
 
-- REST API
+- High Performance REST API
 - Shared Config State
 - Environment Variable Support
 - Automatically Generate and Serve OpenAPI JSON
 - Uses Latest Version of Axum (0.8)
 
 A list of upcoming / in-progress features can be found in the [TODO.md](TODO.md) file
+
+## Requirements
+1. PostgreSQL running in standalone / cluster mode with replication
+2. Rust 1.8
 
 ## Usage
 
